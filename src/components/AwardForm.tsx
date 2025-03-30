@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { type Award } from "@/types/content";
+import axios from "axios";
 
 interface AwardFormProps {
   award?: Omit<Award, "id">;
@@ -19,38 +19,62 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
   const [description, setDescription] = useState(award?.description || "");
   const [imageUrl, setImageUrl] = useState(award?.imageUrl || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Axios upload function
+  const uploadToImgur = async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await axios.post("https://api.imgur.com/3/image", formData, {
+        headers: {
+          "Authorization": "Client-ID 7deff2057df58d3", // Your Imgur Client ID
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        return response.data.data.link;
+      } else {
+        throw new Error("Imgur upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setErrorMessage("Image upload failed. Please try again.");
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // If an image file was selected, create a data URL
-    if (imageFile) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageDataUrl = reader.result as string;
-        onSubmit({
-          title,
-          date,
-          description,
-          imageUrl: imageDataUrl,
-        });
-      };
-      reader.readAsDataURL(imageFile);
-    } else {
-      // Use the existing image URL or placeholder
+
+    setLoading(true);
+
+    try {
+      let finalImageUrl = imageUrl;
+
+      if (imageFile) {
+        finalImageUrl = await uploadToImgur(imageFile);
+      }
+
       onSubmit({
         title,
         date,
         description,
-        imageUrl: imageUrl || "/placeholder.svg",
+        imageUrl: finalImageUrl,
       });
+    } catch (error) {
+      console.error("Error submitting award:", error);
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
-      // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageUrl(reader.result as string);
@@ -58,7 +82,7 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
       reader.readAsDataURL(e.target.files[0]);
     }
   };
-  
+
   return (
     <Dialog open={true} onOpenChange={onCancel}>
       <DialogContent className="sm:max-w-lg">
@@ -75,7 +99,7 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="date">Date Received</Label>
             <Input
@@ -86,7 +110,7 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -97,7 +121,7 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="image">Award Image</Label>
             <Input
@@ -108,21 +132,31 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
               className="cursor-pointer"
             />
           </div>
-          
+
           {imageUrl && (
             <div className="mt-2">
               <p className="text-sm text-gray-500 mb-2">Image Preview:</p>
-              <img 
-                src={imageUrl} 
-                alt="Preview" 
-                className="max-h-40 rounded-md object-cover" 
+              <img
+                src={imageUrl}
+                alt="Preview"
+                className="max-h-40 rounded-md object-cover"
               />
             </div>
           )}
-          
+
+          {errorMessage && (
+            <div className="text-red-600 mt-2">
+              <p>{errorMessage}</p>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">{award ? "Update" : "Add"} Award</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Uploading..." : award ? "Update" : "Add"} Award
+            </Button>
           </div>
         </form>
       </DialogContent>
