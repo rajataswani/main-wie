@@ -91,7 +91,7 @@ const AwardForm = ({ award, onSubmit, onCancel }: AwardFormProps) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Award Title</Label>
+            <Label htmlFor="title">Award Title tobremoved</Label>
             <Input
               id="title"
               value={title}
