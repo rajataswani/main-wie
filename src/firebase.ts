@@ -4,13 +4,13 @@ import { getAuth } from "firebase/auth";
 
 // 🔹 Firebase Configuration (Make sure this is correct)
 const firebaseConfig = {
-  apiKey: "AIzaSyCw-EIzaDp7bY48eC31lP1UBIQqunJVWfw",
-  authDomain: "sou-wie.firebaseapp.com",
-  projectId: "sou-wie",
-  storageBucket: "sou-wie.appspot.com", // Ensure correct format
-  messagingSenderId: "121651925560",
-  appId: "1:121651925560:web:546b25b498e56ed42ecccd",
-  measurementId: "G-SN3ND5NW0N",
+  apiKey: "AIzaSyDeCCEycUpxY8uJ7rzPy9M1Omr3UeslowI",
+  authDomain: "feb26-sbwebsite.firebaseapp.com",
+  projectId: "feb26-sbwebsite",
+  storageBucket: "feb26-sbwebsite.firebasestorage.app",
+  messagingSenderId: "285445571166",
+  appId: "1:285445571166:web:a7bd606970476b18862acf",
+  measurementId: "G-MM592Z0NBW"
 };
 
 // ✅ Prevent multiple Firebase initializations
@@ -22,3 +22,4 @@ const db = getFirestore(app);
 
 // ✅ Export initialized instances
 export { app, auth, db };
+
